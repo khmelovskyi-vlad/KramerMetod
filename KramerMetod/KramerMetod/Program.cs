@@ -9,12 +9,17 @@ namespace KramerMetod
         static void Main(string[] args)
         {
             Console.WriteLine("Kramer method");
+            FindDeterminantAndX();
+            Console.ReadKey();
+        }
+        static void FindDeterminantAndX()
+        {
             (int[,] matrix, int[,] ansverMatrix) = ReturnTwoMatrix();
             var determinantBasicMatrix = Determinant(matrix);
             Console.WriteLine($"Determinant = {determinantBasicMatrix}");
             if (determinantBasicMatrix == 0)
             {
-                Console.ReadKey();
+                Console.WriteLine($"The system is unlimited");
             }
             else
             {
@@ -34,7 +39,6 @@ namespace KramerMetod
                         matrix[i, number] = oldMatrix[i];
                     }
                 }
-                Console.ReadKey();
             }
         }
         static int Determinant(int[,] matrix)
@@ -78,36 +82,32 @@ namespace KramerMetod
             int[,] ansverMatrix = new int[n,1];
             for (int i = 0; i < matrixEquation.GetLength(0); i++)
             {
-                string stringEquation = ReadString($"{i + 1} equation without index x");
-                var printEquation = Split(stringEquation);
-                    do
-                    {
-                        try
-                        {
-                            if (printEquation.Length == n + 1)
-                            {
-                                ansverMatrix[i, 0] = Int32.Parse(printEquation[printEquation.Length - 1]);
-                                for (int j = 0; j < printEquation.Length - 1; j++)
-                                {
-                                    matrixEquation[i, j] = Int32.Parse(printEquation[j]);
-                                }
-                            }
-                            break;
-                        }
-                        catch(FormatException ex)
-                        {
-                            Console.WriteLine($"Bed input {ex.Message}, try gain or click Escape");
-                            stringEquation = ReadString($"{i + 1} equation without index x");
-                            printEquation = Split(stringEquation);
-                        }
-                    } while (true);
-                
-                if (printEquation.Length != n + 1)
+                do
                 {
-                    Console.WriteLine("Bed input, try again");
-                    i--;
-                    continue;
-                }
+                    string stringEquation = ReadString($"{i + 1} equation without index x");
+                    var printEquation = Split(stringEquation);
+                    try
+                    {
+                        if (printEquation.Length == n + 1)
+                        {
+                            ansverMatrix[i, 0] = Int32.Parse(printEquation[printEquation.Length - 1]);
+                            for (int j = 0; j < printEquation.Length - 1; j++)
+                            {
+                                matrixEquation[i, j] = Int32.Parse(printEquation[j]);
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("Bed input, try again");
+                            continue;
+                        }
+                        break;
+                    }
+                    catch(FormatException ex)
+                    {
+                        Console.WriteLine($"Bed input {ex.Message}, try gain or click Escape");
+                    }
+                } while (true);
             }
             return (matrixEquation, ansverMatrix);
         }
