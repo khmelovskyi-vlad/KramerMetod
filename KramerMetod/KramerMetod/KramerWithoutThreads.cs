@@ -1,34 +1,33 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace KramerMetod
 {
-    class Program
+    class KramerWithoutThreads
     {
-        static void Main(string[] args)
+        public KramerWithoutThreads()
         {
-            Console.WriteLine("Kramer method");
-            KramerWithThreadFinalVersion kramerWithThreadFinalVersion = new KramerWithThreadFinalVersion();
-            kramerWithThreadFinalVersion.FindDeterminantAndX();
-            //FindDeterminantAndX();
-            //Task.Run(() => Console.ReadKey());
-            //KramerUsingThreadsBad kramerUsingThreadsBad = new KramerUsingThreadsBad();
-            //kramerUsingThreadsBad.FindDeterminantAndX();
-            //KramerUsingThreads kramerUsingThreads = new KramerUsingThreads();
-            //kramerUsingThreads.FindDeterminantAndX();
-            //KramerWithoutThreads kramerWithoutThreads = new KramerWithoutThreads();
-            //kramerWithoutThreads.FindDeterminantAndX();
-            Console.ReadKey();
         }
-        static void FindDeterminantAndX()
+        private int[,] matrixEquation;
+        private int[] matrixAnsver;
+        private int numberOfEquations;
+        int determinant;
+
+        private void InitializeMatrix()
         {
-            (int[,] matrix, int[,] ansverMatrix) = ReturnTwoMatrix();
+            numberOfEquations = ReadInt("number of equation");
+            matrixEquation = new int[numberOfEquations, numberOfEquations];
+            matrixAnsver = new int[numberOfEquations];
+        }
+        public void FindDeterminantAndX()
+        {
+            InitializeMatrix();
+            FindTwoMatrix();
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
-            var determinantBasicMatrix = Determinant(matrix);
+            var determinantBasicMatrix = Determinant(matrixEquation);
             Console.WriteLine($"Determinant = {determinantBasicMatrix}");
             if (determinantBasicMatrix == 0)
             {
@@ -36,20 +35,20 @@ namespace KramerMetod
             }
             else
             {
-                int[] oldMatrix = new int[matrix.GetLength(0)];
+                int[] oldMatrix = new int[matrixEquation.GetLength(0)];
                 var allDeterminantDivideRoBasicMatrix = 0d;
-                for (int number = 0; number < matrix.GetLength(0); number++)
+                for (int number = 0; number < matrixEquation.GetLength(0); number++)
                 {
-                    for (int i = 0; i < matrix.GetLength(0); i++)
+                    for (int i = 0; i < matrixEquation.GetLength(0); i++)
                     {
-                        oldMatrix[i] = matrix[i, number];
-                        matrix[i, number] = ansverMatrix[i, 0];
+                        oldMatrix[i] = matrixEquation[i, number];
+                        matrixEquation[i, number] = matrixAnsver[i];
                     }
-                    allDeterminantDivideRoBasicMatrix = (double)Determinant(matrix) / (double)determinantBasicMatrix;
+                    allDeterminantDivideRoBasicMatrix = (double)Determinant(matrixEquation) / (double)determinantBasicMatrix;
                     Console.WriteLine($"x{number + 1} = {allDeterminantDivideRoBasicMatrix}");
-                    for (int i = 0; i < matrix.GetLength(0); i++)
+                    for (int i = 0; i < matrixEquation.GetLength(0); i++)
                     {
-                        matrix[i, number] = oldMatrix[i];
+                        matrixEquation[i, number] = oldMatrix[i];
                     }
                 }
             }
@@ -60,7 +59,9 @@ namespace KramerMetod
                 ts.Milliseconds);
             Console.WriteLine("RunTime " + elapsedTime);
         }
-        static int Determinant(int[,] matrix)
+
+
+        private int Determinant(int[,] matrix)
         {
             if (matrix.Length == 1)
             {
@@ -69,11 +70,12 @@ namespace KramerMetod
             var determinant = 0;
             for (int i = 0; i < matrix.GetLength(0); i++)
             {
-                determinant += (int)(matrix[0, i] * Math.Pow(-1, i) * Determinant(SmallMatrix(matrix, 0, i)));
+                var s = Determinant(SmallMatrix(matrix, 0, i));
+                determinant += (int)(matrix[0, i] * Math.Pow(-1, i) * s);
             }
             return determinant;
         }
-        static int[,] SmallMatrix(int[,] bigMatrix, int i, int j)
+        private int[,] SmallMatrix(int[,] bigMatrix, int i, int j)
         {
             int[,] smallMatrix = new int[bigMatrix.GetLength(0) - 1, bigMatrix.GetLength(0) - 1];
             for (int iBigMatrix = 0, iSmallMatrix = 0; iBigMatrix < bigMatrix.GetLength(0); iSmallMatrix += (i == iBigMatrix ? 0 : 1), iBigMatrix++)
@@ -94,25 +96,23 @@ namespace KramerMetod
             }
             return smallMatrix;
         }
-        static (int[,], int[,]) ReturnTwoMatrix()
+        private void FindTwoMatrix()
         {
-            var n = ReadInt("number of equation");
-            int[,] matrixEquation = new int[n, n];
-            int[,] ansverMatrix = new int[n,1];
             for (int i = 0; i < matrixEquation.GetLength(0); i++)
             {
                 do
                 {
-                    string stringEquation = ReadString($"{i + 1} equation without index x");
-                    var printEquation = Split(stringEquation);
+                    var equation = ReadString($"{i + 1} equation");
+                    var equationWithoutIndex = DeleteIndex(equation);
+                    var splitEquation = Split(equationWithoutIndex);
                     try
                     {
-                        if (printEquation.Length == n + 1)
+                        if (splitEquation.Length == numberOfEquations + 1)
                         {
-                            ansverMatrix[i, 0] = Int32.Parse(printEquation[printEquation.Length - 1]);
-                            for (int j = 0; j < printEquation.Length - 1; j++)
+                            matrixAnsver[i] = Int32.Parse(splitEquation[splitEquation.Length - 1]);
+                            for (int j = 0; j < splitEquation.Length - 1; j++)
                             {
-                                matrixEquation[i, j] = Int32.Parse(printEquation[j]);
+                                matrixEquation[i, j] = Int32.Parse(splitEquation[j]);
                             }
                         }
                         else
@@ -122,15 +122,39 @@ namespace KramerMetod
                         }
                         break;
                     }
-                    catch(FormatException ex)
+                    catch (FormatException ex)
                     {
                         Console.WriteLine($"Bed input {ex.Message}, try gain or click Escape");
                     }
                 } while (true);
             }
-            return (matrixEquation, ansverMatrix);
         }
-        static int ReadInt(string  readString)
+        private string DeleteIndex(string equation)
+        {
+            StringBuilder equationWithoutIndex = new StringBuilder();
+            for (int i = 0; i < equation.Length; i++)
+            {
+                if (equation[i] == 'x')
+                {
+                    equationWithoutIndex.Append(equation[i]);
+                    i++;
+                    for (int j = i; j < 10000; j++)
+                    {
+                        if (equation[j] >= '0' && equation[j] <= '9')
+                        {
+                            i++;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+                equationWithoutIndex.Append(equation[i]);
+            }
+            return equationWithoutIndex.ToString();
+        }
+        private int ReadInt(string readString)
         {
             do
             {
@@ -147,25 +171,25 @@ namespace KramerMetod
                     var keyLine = key.KeyChar + line;
                     return Int32.Parse(keyLine);
                 }
-                catch(FormatException ex)
+                catch (FormatException ex)
                 {
                     Console.WriteLine($"Bed input {ex.Message}, try again or click Escape");
                 }
             } while (true);
         }
-        static string ReadString(string read)
+        private string ReadString(string read)
         {
-                Console.WriteLine($"Enter {read}");
-                var key = Console.ReadKey();
-                if (key.Key == ConsoleKey.Escape)
-                {
-                    throw new OperationCanceledException();
-                }
-                var line = Console.ReadLine();
-                var keylin = $"{key.KeyChar}{line}";
-                return Convert.ToString(keylin);
+            Console.WriteLine($"Enter {read}");
+            var key = Console.ReadKey();
+            if (key.Key == ConsoleKey.Escape)
+            {
+                throw new OperationCanceledException();
+            }
+            var line = Console.ReadLine();
+            var keylin = $"{key.KeyChar}{line}";
+            return Convert.ToString(keylin);
         }
-        static string[] Split(string split)
+        private string[] Split(string split)
         {
             return split.Split(new[] { ' ', 'x', '=' }, StringSplitOptions.RemoveEmptyEntries);
         }
